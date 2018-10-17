@@ -103,10 +103,8 @@ void setup() {
 }
 
 int hourFormat12(int h24) {
-  if (h24 == 0 || h24 == 12) {
-    return 12;
-  }
-  return h24 % 12;
+  const auto mod = h24 % 12;
+  return mod == 0 ? 12 : mod;
 }
 
 uint32_t getMinute(int m) {
