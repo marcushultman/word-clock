@@ -20,21 +20,6 @@ enum ButtonState {
 #define PAST 1024
 #define TO 512
 
-const uint32_t kHourLED[] = {
-    1L << (11 + 2),
-    1L << (11 + 0),
-    3L << (11 + 3),
-    1L << (11 + 1),
-    1L << (11 + 6),
-    1L << (11 + 5),
-    3L << (11 + 17),
-    3L << (11 + 13),
-    1L << (11 + 11),
-    1L << (11 + 12),
-    3L << (11 + 7),
-    3L << (11 + 9),
-};
-
 const auto k5Minutes = TimeSpan(0, 0, 5, 0);
 const auto k1Hour = TimeSpan(0, 1, 0, 0);
 
@@ -53,12 +38,8 @@ volatile ButtonState add_minute;
 
 uint32_t previous_led = 0;
 
-void addHour() {
-  add_hour = kAdd;
-}
-void addMinute() {
-  add_minute = kAdd;
-}
+void addHour() { add_hour = kAdd; }
+void addMinute() { add_minute = kAdd; }
 
 void setupRtc() {
   pinMode(A2, OUTPUT);
@@ -92,7 +73,8 @@ void setup() {
 
   if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
-    while (true) continue;
+    while (true)
+      continue;
   }
 
   if (rtc.lostPower()) {
@@ -124,11 +106,30 @@ uint32_t getMinute(int m) {
     return HALF;
   }
 }
-uint32_t getAffix(int m) {
-  return m < 5 ? 0 : m < 35 ? PAST : TO;
-}
+uint32_t getAffix(int m) { return m < 5 ? 0 : m < 35 ? PAST : TO; }
 uint32_t getHour(int h) {
-  return kHourLED[hourFormat12(h) - 1];
+  // clang-format off
+  switch (hourFormat12(h)) {
+    case 2: return 1L << (11 + 0);
+    case 4: return 1L << (11 + 1);
+    case 1: return 1L << (11 + 2);
+
+    case 3: return 3L << (11 + 3);
+    case 6: return 1L << (11 + 5);
+    case 5: return 1L << (11 + 6);
+
+    case 11: return 3L << (11 + 7);
+    case 12: return 3L << (11 + 9);
+
+    case 9: return 1L << (11 + 11);
+    case 10: return 1L << (11 + 12);
+    case 8: return 3L << (11 + 13);
+
+    case 7: return 3L << (11 + 17);
+
+    default: return 0;
+  };
+  // clang-format on
 }
 uint32_t getLED(int h, int m) {
   const auto affix = getAffix(m);
@@ -149,6 +150,7 @@ void loop() {
   }
 
   const auto now = rtc.now();
+  // hour (0-23) minute (0-59)
   auto led = getLED(now.hour(), now.minute());
 
   if (led == previous_led) {
