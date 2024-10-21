@@ -168,8 +168,10 @@ void loop() {
   // Night mode, 23-08
   // const auto night_mode = now.hour() % 23 < 8;
   for (auto i = 0; i < LED_NUM; ++i) {
+    Serial.print(led & 1 ? "1" : "0");
     pixels.setPixelColor(i, led & 1 ? LED_ON : LED_OFF);
     led >>= 1;
   }
+  Serial.println();
   pixels.show();
 }
