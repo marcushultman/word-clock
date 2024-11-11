@@ -63,9 +63,20 @@ struct RTC_DS3231 {
     };
     ds3231_configure_time(&_rtc, &_data);
   }
-  void adjust(std::chrono::minutes m) {
-    assert(std::abs(m.count()) < 60);
-    _data.minutes += m.count();
+  // NOTE: hour will be clamped to the current day
+  void adjust(std::chrono::minutes d) {
+    auto hours = int(_data.hours);
+    auto minutes = int(_data.minutes) + d.count();
+    while (minutes > 59) {
+      ++hours;
+      minutes -= 60;
+    }
+    while (minutes < 0) {
+      --hours;
+      minutes += 60;
+    }
+    _data.hours = hours;
+    _data.minutes = minutes;
     ds3231_configure_time(&_rtc, &_data);
   }
   bool begin() {
